@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Inserimento Vocale</title>
+  <title>Dettato Vocale per Google Sheets</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -116,8 +116,7 @@
 </div>
 
 <script>
-  // SOSTITUISCI QUESTO URL CON QUELLO DELLA TUA WEB APP SU GOOGLE APPS SCRIPT
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby8x4qZjtZ1URr8R4NjqwYIvL3NaTtMxUaZyS6X9lbr6zuxl1Gy3513tLeO61Pd8IGiwA/exec";
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyKYLjMbTGlVMDhrdX9lJP6gVrTvX-0IxS9F3wBEVyd7Rod5kIT-_d8xVvwvTqHrltW5w/exec";
 
   let recognition = null;
   let isRecording = false;
@@ -197,21 +196,23 @@
     document.getElementById('btnInvia').disabled = true;
     mostraStato('Invio in corso...', false);
 
+    const payload = JSON.stringify({ classe: classe, sezione: sezione, testo: testo });
+
     fetch(WEB_APP_URL, {
       method: "POST",
       mode: "no-cors",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "text/plain;charset=utf-8"
       },
-      body: JSON.stringify({ classe: classe, sezione: sezione, testo: testo })
+      body: payload
     })
     .then(() => {
-      mostraStato('Dati inviati con successo al foglio!', false);
+      mostraStato('Dati inviati con successo al foglio Google!', false);
       document.getElementById('anteprima').value = '';
       document.getElementById('btnInvia').disabled = false;
     })
     .catch(err => {
-      mostraStato('Errore di connessione: ' + err, true);
+      mostraStato('Errore durante l\'invio: ' + err, true);
       document.getElementById('btnInvia').disabled = false;
     });
   }
