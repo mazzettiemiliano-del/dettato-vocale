@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Inserimento Vocale</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 15px;
+      background-color: #f9f9f9;
+    }
+    .card {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    input[type="text"], textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    textarea {
+      height: 100px;
+      resize: vertical;
+    }
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    button {
+      flex: 1;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-mic {
+      background-color: #007bff;
+      color: white;
+    }
+    .btn-mic.recording {
+      background-color: #dc3545;
+      animation: pulse 1.5s infinite;
+    }
+    .btn-send {
+      background-color: #28a745;
+      color: white;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .success { background-color: #d4edda; color: #155724; }
+    .error { background-color: #f8d7da; color: #721c24; }
+    
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Dettato Vocale per Google Sheets</h2>
+  
+  <div class="form-group">
+    <label for="classe">Classe:</label>
+    <input type="text" id="classe" placeholder="Es. 1">
+  </div>
+  
+  <div class="form-group">
+    <label for="sezione">Sezione:</label>
+    <input type="text" id="sezione" placeholder="Es. A">
+  </div>
+
+  <div class="form-group">
+    <label for="anteprima">Anteprima Testo (Modificabile):</label>
+    <textarea id="anteprima" placeholder="Premi 'Avvia Dettato' e parla... Il testo apparirà qui e potrai modificarlo prima di inviare."></textarea>
+  </div>
+
+  <div class="btn-group">
+    <button id="btnMic" class="btn-mic" onclick="toggleRiconoscimento()">🎤 Avvia Dettato</button>
+    <button id="btnInvia" class="btn-send" onclick="inviaDati()">📤 Invia al Foglio</button>
+  </div>
+
+  <div id="status"></div>
+</div>
+
+<script>
+  // SOSTITUISCI QUESTO URL CON QUELLO DELLA TUA WEB APP SU GOOGLE APPS SCRIPT
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycby8x4qZjtZ1URr8R4NjqwYIvL3NaTtMxUaZyS6X9lbr6zuxl1Gy3513tLeO61Pd8IGiwA/exec";
+
+  let recognition = null;
+  let isRecording = false;
+
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SpeechRecognition();
+    recognition.lang = 'it-IT';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onresult = function(event) {
+      let transcriptFinale = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          transcriptFinale += event.results[i][0].transcript + ' ';
+        }
+      }
+      if (transcriptFinale !== '') {
+        const anteprima = document.getElementById('anteprima');
+        anteprima.value = (anteprima.value + ' ' + transcriptFinale).trim();
+      }
+    };
+
+    recognition.onerror = function(event) {
+      mostraStato('Errore riconoscimento vocale: ' + event.error, true);
+      stopRecording();
+    };
+
+    recognition.onend = function() {
+      if (isRecording) {
+        stopRecording();
+      }
+    };
+  } else {
+    alert("Il tuo browser non supporta la Web Speech API. Usa Google Chrome o Microsoft Edge.");
+  }
+
+  async function toggleRiconoscimento() {
+    if (!recognition) return;
+
+    if (isRecording) {
+      recognition.stop();
+      stopRecording();
+    } else {
+      try {
+        await navigator.mediaDevices.getUserMedia({ audio: true });
+        recognition.start();
+        isRecording = true;
+        const btn = document.getElementById('btnMic');
+        btn.textContent = '🛑 Ferma Dettato';
+        btn.classList.add('recording');
+        mostraStato('In ascolto...', false);
+      } catch (err) {
+        mostraStato('Accesso al microfono negato o non autorizzato nel browser.', true);
+      }
+    }
+  }
+
+  function stopRecording() {
+    isRecording = false;
+    const btn = document.getElementById('btnMic');
+    btn.textContent = '🎤 Avvia Dettato';
+    btn.classList.remove('recording');
+  }
+
+  function inviaDati() {
+    const classe = document.getElementById('classe').value.trim();
+    const sezione = document.getElementById('sezione').value.trim();
+    const testo = document.getElementById('anteprima').value.trim();
+
+    if (!testo) {
+      mostraStato('Nessun testo da inviare!', true);
+      return;
+    }
+
+    document.getElementById('btnInvia').disabled = true;
+    mostraStato('Invio in corso...', false);
+
+    fetch(WEB_APP_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ classe: classe, sezione: sezione, testo: testo })
+    })
+    .then(() => {
+      mostraStato('Dati inviati con successo al foglio!', false);
+      document.getElementById('anteprima').value = '';
+      document.getElementById('btnInvia').disabled = false;
+    })
+    .catch(err => {
+      mostraStato('Errore di connessione: ' + err, true);
+      document.getElementById('btnInvia').disabled = false;
+    });
+  }
+
+  function mostraStato(messaggio, isError) {
+    const statusDiv = document.getElementById('status');
+    statusDiv.style.display = 'block';
+    statusDiv.textContent = messaggio;
+    statusDiv.className = isError ? 'error' : 'success';
+  }
+</script>
+
+</body>
+</html>
