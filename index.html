@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Dettato Vocale per Google Sheets - Versione 4</title>
+  <title>Dettato Vocale per Google Sheets - Versione 6</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,16 +37,23 @@
       font-weight: bold;
       margin-bottom: 5px;
     }
-    input[type="text"], textarea {
+    .help-text {
+      font-size: 14px;
+      color: #555;
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    select, textarea {
       width: 100%;
       padding: 10px;
       border: 1px solid #ccc;
       border-radius: 4px;
       box-sizing: border-box;
       font-size: 16px;
+      background-color: #fff;
     }
     textarea {
-      height: 100px;
+      height: 110px;
       resize: vertical;
     }
     .btn-group {
@@ -98,22 +105,34 @@
 <body>
 
 <div class="card">
-  <div class="version-tag">Versione 4</div>
+  <div class="version-tag">Versione 6</div>
   <h2>Dettato Vocale per Google Sheets</h2>
   
   <div class="form-group">
     <label for="classe">Classe:</label>
-    <input type="text" id="classe" placeholder="Es. 1">
+    <select id="classe">
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+    </select>
   </div>
   
   <div class="form-group">
     <label for="sezione">Sezione:</label>
-    <input type="text" id="sezione" placeholder="Es. A">
+    <select id="sezione">
+      <option value="A">A</option>
+      <option value="B">B</option>
+    </select>
   </div>
 
   <div class="form-group">
     <label for="anteprima">Anteprima Testo (Modificabile):</label>
-    <textarea id="anteprima" placeholder="Premi 'Avvia Dettato' e parla... Il testo apparirà qui e potrai modificarlo prima di inviare."></textarea>
+    <div class="help-text">
+      Inserisci qui i nomi e cognomi dei bambini che non saranno segnati a mensa. Puoi anche usare il pulsante AVVIA DETTATO per dettarli. Avrai la possibilità di correggere o integrare prima dell'invio.
+    </div>
+    <textarea id="anteprima" placeholder="I nomi appariranno qui..."></textarea>
   </div>
 
   <div class="btn-group">
@@ -125,7 +144,7 @@
 </div>
 
 <script>
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz4cGKE5LFtVHp26rKGcwBHRs8MquNZ6Jct7_rhvN7Aoi7g0pU93-LfPJhgfCinZk5r2g/exec";
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxhA56JUpF07lMZoclwZwUrMyhZw8NDxKJJePNmmw-r0a2CDi2OTpAQmCxzbbHCve9X/exec";
 
   let recognition = null;
   let isRecording = false;
@@ -193,8 +212,8 @@
   }
 
   function inviaDati() {
-    const classe = document.getElementById('classe').value.trim();
-    const sezione = document.getElementById('sezione').value.trim();
+    const classe = document.getElementById('classe').value;
+    const sezione = document.getElementById('sezione').value;
     const testo = document.getElementById('anteprima').value.trim();
 
     if (!testo) {
@@ -205,7 +224,6 @@
     document.getElementById('btnInvia').disabled = true;
     mostraStato('Invio in corso...', false);
 
-    // Costruzione URL con parametri per garantire il recapito su Apps Script
     const params = new URLSearchParams();
     params.append('classe', classe);
     params.append('sezione', sezione);
