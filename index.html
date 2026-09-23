@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Dettato Vocale per Google Sheets - Versione 3</title>
+  <title>Dettato Vocale per Google Sheets - Versione 4</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -98,7 +98,7 @@
 <body>
 
 <div class="card">
-  <div class="version-tag">Versione 3</div>
+  <div class="version-tag">Versione 4</div>
   <h2>Dettato Vocale per Google Sheets</h2>
   
   <div class="form-group">
@@ -125,7 +125,7 @@
 </div>
 
 <script>
-  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxhA56JUpF07lMZoclwZwUrMyhZw8NDxKJJePNmmw-r0a2CDi2OTpAQmCxzbbHCve9X/exec";
+  const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbz4cGKE5LFtVHp26rKGcwBHRs8MquNZ6Jct7_rhvN7Aoi7g0pU93-LfPJhgfCinZk5r2g/exec";
 
   let recognition = null;
   let isRecording = false;
@@ -205,10 +205,11 @@
     document.getElementById('btnInvia').disabled = true;
     mostraStato('Invio in corso...', false);
 
-    const formData = new URLSearchParams();
-    formData.append('classe', classe);
-    formData.append('sezione', sezione);
-    formData.append('testo', testo);
+    // Costruzione URL con parametri per garantire il recapito su Apps Script
+    const params = new URLSearchParams();
+    params.append('classe', classe);
+    params.append('sezione', sezione);
+    params.append('testo', testo);
 
     fetch(WEB_APP_URL, {
       method: "POST",
@@ -216,7 +217,7 @@
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       },
-      body: formData.toString()
+      body: params.toString()
     })
     .then(() => {
       mostraStato('Dati inviati! Controlla il foglio Google.', false);
